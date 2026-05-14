@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: goldentest
+  labels:
+    app.kubernetes.io/managed-by: backstage
+    owner: devops-team
+    backstage.io/kubernetes-id: goldentest
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: goldentest-quota
+  namespace: goldentest
+spec:
+  hard:
+    requests.cpu: "200m"
+    requests.memory: "256Mi"
+    limits.cpu: "200m"
+    limits.memory: "256Mi"
+    pods: "10"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: goldentest
+  namespace: goldentest
+  labels:
+    app: goldentest
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: goldentest-role
+  namespace: goldentest
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: goldentest-rolebinding
+  namespace: goldentest
+subjects:
+  - kind: ServiceAccount
+    name: goldentest
+    namespace: goldentest
+roleRef:
+  kind: Role
+  name: goldentest-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: goldentest-limits
+  namespace: goldentest
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: "200m"
+        memory: "256Mi"
+      defaultRequest:
+        cpu: "100m"
+        memory: "128Mi"
